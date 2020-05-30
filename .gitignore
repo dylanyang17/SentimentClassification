@@ -1,0 +1,4 @@
+data/sgns.sogounews.bigram-char
+data/reduced.sgns.sogounews.bigram-char
+**/*.swp
+**/*~
