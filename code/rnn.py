@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 from config import Config
 
@@ -5,32 +6,11 @@ from config import Config
 class RNN(nn.Module):
     def __init__(self):
         super().__init__()
-        self.rnn = nn.Sequential(
-            nn.LSTM(Config.seq_len, Config.seq_len, 2),
-            nn.Conv1d(Config.seq_len, 200, kernel_size=5, padding=2),
-            nn.ReLU(),
-            nn.BatchNorm1d(200),
-            nn.Dropout(p=.2),
-
-            nn.Conv1d(200, 100, kernel_size=5, padding=2),
-            nn.ReLU(),
-            nn.BatchNorm1d(100),
-            nn.Dropout(p=.2),
-
-            nn.Conv1d(100, 16, kernel_size=5, padding=2),
-            nn.ReLU(),
-            nn.BatchNorm1d(16),
-            nn.Dropout(p=.2),
-        )
-        self.fc = nn.Sequential(
-            nn.Linear(16 * Config.vec_len, 100),
-            nn.ReLU(),
-            nn.Linear(100, 8),
-            nn.Tanh()
-        )
+        self.lstm = nn.LSTM(input_size=Config.vec_len, hidden_size=5,
+                            num_layers=1, dropout=0.2)
+        self.fc = nn.Linear(5, Config.label_len)
 
     def forward(self, input_data):
-        output = self.cnn(input_data)
-        output = output.view(output.size()[0], -1)
-        output = self.fc(output)
-        return output
+        states, hidden = self.lstm(input_data.permute([1, 0, 2]))
+        outputs = self.fc(states[-1])
+        return outputs

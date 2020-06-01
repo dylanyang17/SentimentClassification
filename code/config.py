@@ -11,9 +11,10 @@ class Config:
     test_data_path = os.path.join(data_root, 'sinanews.test')
     label_len = 8
     vec_len = 300
-    seq_len = 300
+    seq_len = 500
     unk_vec = torch.rand([vec_len])*2 - 1
-    train_batch_size = 16
+    filter_num = 4
+    train_batch_size = 32
     lr = 0.001
     momentum = 0.9
     epoch_num = 100

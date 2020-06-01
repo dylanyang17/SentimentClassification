@@ -2,11 +2,14 @@ import os
 import time
 
 import torch
+from sklearn.metrics import f1_score
 from torch import nn, optim
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms as transforms
 from config import Config
 from cnn import CNN
+from rnn import RNN
+import sklearn
 import re
 
 
@@ -58,7 +61,7 @@ class MyDataset(Dataset):
                 sen = tmp[1].split(':')
                 for j in range(2, label_len+2):
                     label_item[j-2] = float(re.match('([0-9]*).*', sen[j]).group(1))
-                label_item /= label_item.sum()
+                # label_item /= label_item.sum()
                 self.labels.append(label_item)
 
     def __len__(self):
@@ -70,6 +73,8 @@ class MyDataset(Dataset):
 
 def calc_acc(net, device, dataloaders):
     ret = []
+    y_true = []
+    y_pred = []
     with torch.no_grad():
         for dataloader in dataloaders:
             correct = torch.zeros([1]).to(device)
@@ -80,9 +85,16 @@ def calc_acc(net, device, dataloaders):
                 labels = labels.to(device)
                 outputs = net(inputs)
                 prediction = torch.argmax(outputs, 1)
-                correct += (prediction == torch.argmax(labels, 1)).sum().float()
+                gt = torch.argmax(labels, 1)
+                y_pred.extend(prediction.cpu().numpy().tolist())
+                y_true.extend(gt.cpu().numpy().tolist())
+                correct += (prediction == gt).sum().float()
                 total += len(labels)
             ret.append(float(correct/total))
+    print(y_true)
+    print(y_pred)
+    score = f1_score(y_true, y_pred, average='macro')
+    print ('f1 score: ', score)
     return ret
 
 
@@ -100,7 +112,7 @@ def train(net, device, optimizer, criterion, train_dataloader, valid_dataloader,
             labels = labels.to(device)
             optimizer.zero_grad()
             outputs = net(inputs)
-            loss = criterion(outputs, labels)
+            loss = criterion(outputs, torch.argmax(labels, 1))
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
@@ -117,17 +129,16 @@ def train_cnn(train_dataloader, valid_dataloader, test_dataloader):
     device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
     net = CNN().to(device)
     optimizer = optim.SGD(net.parameters(), lr=Config.lr, momentum=Config.momentum)
-    criterion = nn.MSELoss()
+    criterion = nn.CrossEntropyLoss()
     train(net, device, optimizer, criterion, train_dataloader, valid_dataloader, test_dataloader)
 
 
-def train_rnn():
-    pass
-    # device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
-    # net = RNN().to(device)
-    # optimizer = optim.SGD(net.parameters(), lr=Config.lr, momentum=Config.momentum)
-    # criterion = nn.MSELoss()
-    # train(net, device, optimizer, criterion, train_dataloader, test_dataloader)
+def train_rnn(train_dataloader, valid_dataloader, test_dataloader):
+    device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+    net = RNN().to(device)
+    optimizer = optim.SGD(net.parameters(), lr=Config.lr, momentum=Config.momentum)
+    criterion = nn.CrossEntropyLoss()
+    train(net, device, optimizer, criterion, train_dataloader, valid_dataloader, test_dataloader)
 
 
 if __name__ == '__main__':
@@ -139,4 +150,5 @@ if __name__ == '__main__':
     valid_dataloader = DataLoader(dataset=valid_data, shuffle=True, num_workers=0, batch_size=Config.train_batch_size)
     test_dataloader = DataLoader(dataset=test_data, shuffle=True, num_workers=0, batch_size=Config.train_batch_size)
 
-    train_cnn(train_dataloader, valid_dataloader, test_dataloader)
+    # train_cnn(train_dataloader, valid_dataloader, test_dataloader)
+    train_rnn(train_dataloader, valid_dataloader, test_dataloader)
