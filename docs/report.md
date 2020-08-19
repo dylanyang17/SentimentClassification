@@ -20,7 +20,7 @@
 
 ### 网络结构
 
-![image-20200531233638610](C:\Users\31562\AppData\Roaming\Typora\typora-user-images\image-20200531233638610.png)
+![image-20200531233638610](res\cnn_network.png)
 
 分 3、4、5 三个卷积核（代表不同的观测长度）进行 Conv2d 操作，并且利用 MaxPool2d、Dropout 对这三个结果分别进行池化和 dropout 操作：
 
@@ -63,7 +63,7 @@ self.fc = nn.Linear(3 * Config.filter_num, Config.label_len)
 
 ## 网络结构
 
-![image-20200531233649548](C:\Users\31562\AppData\Roaming\Typora\typora-user-images\image-20200531233649548.png)
+![image-20200531233649548](res\rnn_network.png)
 
 使用单层的 LSTM 网络：
 
@@ -88,7 +88,7 @@ self.fc = nn.Linear(16, Config.label_len)
 
 ## CNN
 
-![image-20200531234423807](C:\Users\31562\AppData\Roaming\Typora\typora-user-images\image-20200531234423807.png)
+![image-20200531234423807](res\cnn_result.png)
 
 测试集准确率到达了 0.536，并且此时训练集准确率为 0.609，过拟合程度还不大。
 
@@ -96,7 +96,7 @@ self.fc = nn.Linear(16, Config.label_len)
 
 ## RNN
 
-![image-20200531234413151](C:\Users\31562\AppData\Roaming\Typora\typora-user-images\image-20200531234413151.png)
+![image-20200531234413151](res\rnn_result.png)
 
 准确率比起 CNN 来说差了一些，只达到了 0.464。
 
